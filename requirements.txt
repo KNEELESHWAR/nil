@@ -1,5 +1,5 @@
-Pandas
+pandas
 numpy
 Flask
 gunicorn
-sklearn
+scikit-learn
