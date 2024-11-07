@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 app = Flask(__name__)
 
 # Load and preprocess the data
-data = pd.read_csv(r"C:\Users\ADMIN\Downloads\archive\train_u6lujuX_CVtuZ9i (1).csv")
+data = pd.read_csv("train_u6lujuX_CVtuZ9i (1).csv")
 df = pd.DataFrame(data)
 
 # Handle missing values
