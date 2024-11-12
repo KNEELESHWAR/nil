@@ -4,75 +4,183 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Loan Approval Prediction</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
+        /* Global Styles */
         body {
-            background-color: #f8f9fa;
             font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
         }
+
         .container {
-            margin-top: 50px;
-            max-width: 600px;
-            background: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            box-sizing: border-box;
         }
-        .btn-custom {
-            background-color: #007bff;
+
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="radio"], input[type="number"], select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        input[type="radio"]:checked {
+            background-color: #4CAF50;
+        }
+
+        input[type="submit"] {
+            padding: 12px;
+            background-color: #4CAF50;
             color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        .prediction-text {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #333;
+            margin-top: 20px;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                width: 90%;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            input[type="submit"] {
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2 class="text-center mb-4">Loan Approval Prediction</h2>
-        <form action="/predict" method="post">
-            <div class="form-group">
-                <label for="gender">Gender</label>
-                <select class="form-control" id="gender" name="gender" required>
-                    <option value="0">Male</option>
-                    <option value="1">Female</option>
-                </select>
+        <h1>Loan Approval Prediction</h1>
+
+        <form action="/predict" method="POST">
+            <label for="model_choice">Choose a model:</label>
+            <select name="model_choice" id="model_choice" required>
+                <option value="SVC">SVC</option>
+                <option value="Logistic Regression">Logistic Regression</option>
+                <option value="Random Forest">Random Forest</option>
+                <option value="K-Nearest Neighbors">K-Nearest Neighbors</option>
+            </select>
+
+            <div class="radio-group">
+                <label for="gender">Gender:</label>
+                <label><input type="radio" name="gender" value="1" required> Male</label>
+                <label><input type="radio" name="gender" value="0"> Female</label>
             </div>
-            <div class="form-group">
-                <label for="married">Married</label>
-                <select class="form-control" id="married" name="married" required>
-                    <option value="0">No</option>
-                    <option value="1">Yes</option>
-                </select>
+
+            <div class="radio-group">
+                <label for="married">Married:</label>
+                <label><input type="radio" name="married" value="1" required> Yes</label>
+                <label><input type="radio" name="married" value="0"> No</label>
             </div>
-            <div class="form-group">
-                <label for="applicant_income">Applicant Income</label>
-                <input type="number" class="form-control" id="applicant_income" name="applicant_income" placeholder="e.g., 5000" required>
+
+            <label for="dependents">Dependents (0-3):</label>
+            <input type="number" name="dependents" min="0" max="3" required>
+
+            <div class="radio-group">
+                <label for="education">Education:</label>
+                <label><input type="radio" name="education" value="0" required> Graduate</label>
+                <label><input type="radio" name="education" value="1"> Not Graduate</label>
             </div>
-            <div class="form-group">
-                <label for="loan_amount">Loan Amount</label>
-                <input type="number" class="form-control" id="loan_amount" name="loan_amount" placeholder="e.g., 120" required>
+
+            <div class="radio-group">
+                <label for="self_employed">Self Employed:</label>
+                <label><input type="radio" name="self_employed" value="1" required> Yes</label>
+                <label><input type="radio" name="self_employed" value="0"> No</label>
             </div>
-            <div class="form-group">
-                <label for="credit_history">Credit History</label>
-                <select class="form-control" id="credit_history" name="credit_history" required>
-                    <option value="1">Good (1)</option>
-                    <option value="0">No Credit History (0)</option>
-                </select>
+
+            <label for="applicant_income">Applicant Income:</label>
+            <input type="number" name="applicant_income" required>
+
+            <label for="coapplicant_income">Coapplicant Income:</label>
+            <input type="number" name="coapplicant_income" required>
+
+            <label for="loan_amount">Loan Amount:</label>
+            <input type="number" name="loan_amount" required>
+
+            <label for="loan_amount_term">Loan Amount Term (in months):</label>
+            <input type="number" name="loan_amount_term" required>
+
+            <div class="radio-group">
+                <label for="credit_history">Credit History:</label>
+                <label><input type="radio" name="credit_history" value="1" required> Yes</label>
+                <label><input type="radio" name="credit_history" value="0"> No</label>
             </div>
-            <div class="form-group">
-                <label for="cibil_score">CIBIL Score</label>
-                <input type="number" class="form-control" id="cibil_score" name="cibil_score" placeholder="e.g., 700" required>
-            </div>
-            <button type="submit" class="btn btn-custom btn-block">Predict Loan Status</button>
+
+            <label for="property_area">Property Area:</label>
+            <select name="property_area" required>
+                <option value="0">Rural</option>
+                <option value="1">Semiurban</option>
+                <option value="2">Urban</option>
+            </select>
+
+            <input type="submit" value="Predict">
         </form>
 
-        {% if prediction %}
-            <div class="alert alert-info text-center mt-4">
-                Loan Status: <strong>{{ prediction }}</strong>
-            </div>
-        {% endif %}
+        <h2 class="prediction-text">{{ prediction_text }}</h2>
     </div>
-
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@1.16.0/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
