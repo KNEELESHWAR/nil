@@ -1,74 +1,76 @@
-from flask import Flask, render_template, request
-import numpy as np
+import pickle
+from flask import Flask, render_template, request, jsonify
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
 
-app = Flask(__name__)
+app = Flask(__name__,template_folder='templates')
 
-# Load and preprocess the data
-data = pd.read_csv("train_u6lujuX_CVtuZ9i (1).csv")
-df = pd.DataFrame(data)
+# Dictionary to map model names to filenames
+model_files = {
+    "SVC": "SVC.pkl",
+    "Logistic Regression": "LogisticRegression.pkl",
+    "Random Forest": "RandomForestClassifier.pkl",
+    "K-Nearest Neighbors": "KNeighborsClassifier.pkl"
+}
 
-# Handle missing values
-df['Gender'].fillna(df['Gender'].mode()[0], inplace=True)
-df['Married'].fillna(df['Married'].mode()[0], inplace=True)
-df['Credit_History'].fillna(df['Credit_History'].mode()[0], inplace=True)
-df['LoanAmount'].fillna(df['LoanAmount'].median(), inplace=True)
-
-# Encode categorical features
-df['Gender'] = df['Gender'].map({'Male': 0, 'Female': 1})
-df['Married'] = df['Married'].map({'No': 0, 'Yes': 1})
-df['Credit_History'] = df['Credit_History'].astype(int)
-df['Loan_Status'] = df['Loan_Status'].map({'N': 0, 'Y': 1})
-
-# Define features and target
-x = df[['Gender', 'Married', 'ApplicantIncome', 'LoanAmount', 'Credit_History']]
-y = df['Loan_Status']
-
-# Train-test split
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=42)
-
-# Train the model
-model = RandomForestClassifier(max_depth=4, random_state=10)
-model.fit(x_train, y_train)
+# Load the model
+def load_model(model_name):
+    with open(model_files[model_name], "rb") as model_file:
+        model = pickle.load(model_file)
+    return model
 
 # Prediction function
-def predict_loan_status(model, user_input, cibil_score):
-    high_threshold = 750
-    low_threshold = 650
-    model_pred = model.predict(user_input)[0]
-    
-    if cibil_score >= high_threshold:
-        return 'Yes'
-    elif cibil_score < low_threshold:
-        return 'No'
-    else:
-        return 'Yes' if model_pred == 1 else 'No'
+def predict_loan_status(model_choice, gender, married, dependents, education, self_employed,
+                        applicant_income, coapplicant_income, loan_amount, loan_amount_term,
+                        credit_history, property_area):
+    # Load selected model
+    model = load_model(model_choice)
 
+    # Create DataFrame for input
+    user_input = pd.DataFrame({
+        "Gender": [gender],
+        "Married": [married],
+        "Dependents": [dependents],
+        "Education": [education],
+        "Self_Employed": [self_employed],
+        "ApplicantIncome": [applicant_income],
+        "CoapplicantIncome": [coapplicant_income],
+        "LoanAmount": [loan_amount],
+        "Loan_Amount_Term": [loan_amount_term],
+        "Credit_History": [credit_history],
+        "Property_Area": [property_area]
+    })
+
+    prediction = model.predict(user_input)
+    return "Approved" if prediction[0] == 1 else "Not Approved"
+
+# Route for home page
 @app.route('/')
-def index():
+def home():
     return render_template('index.html')
 
+# Route to handle form submission
 @app.route('/predict', methods=['POST'])
 def predict():
-    if request.method == 'POST':
-        # Collect form data
-        gender = int(request.form['gender'])
-        married = int(request.form['married'])
-        applicant_income = float(request.form['applicant_income'])
-        loan_amount = float(request.form['loan_amount'])
-        credit_history = int(request.form['credit_history'])
-        cibil_score = int(request.form['cibil_score'])
-        
-        # Prepare input data for prediction
-        user_input = np.array([[gender, married, applicant_income, loan_amount, credit_history]])
-        
-        # Get prediction
-        loan_status = predict_loan_status(model, user_input, cibil_score)
-        
-        # Return result
-        return render_template('index.html', prediction=loan_status)
+    # Retrieve form data
+    model_choice = request.form['model_choice']
+    gender = int(request.form['gender'])
+    married = int(request.form['married'])
+    dependents = int(request.form['dependents'])
+    education = int(request.form['education'])
+    self_employed = int(request.form['self_employed'])
+    applicant_income = float(request.form['applicant_income'])
+    coapplicant_income = float(request.form['coapplicant_income'])
+    loan_amount = float(request.form['loan_amount'])
+    loan_amount_term = int(request.form['loan_amount_term'])
+    credit_history = int(request.form['credit_history'])
+    property_area = int(request.form['property_area'])
 
-if __name__ == '__main__':
+    # Get prediction
+    prediction = predict_loan_status(model_choice, gender, married, dependents, education, self_employed,
+                                      applicant_income, coapplicant_income, loan_amount, loan_amount_term,
+                                      credit_history, property_area)
+
+    return render_template('index.html', prediction_text=f"Loan Status: {prediction}")
+
+if __name__ == "__main__":
     app.run(debug=True)
